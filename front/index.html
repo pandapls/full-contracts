@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>SimpleDeposit Contract Interaction</title>
+		<script src="./node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="./node_modules/ethers/dist/ethers.umd.js"></script>
+		<style>
+			* {
+			    margin: 0;
+			    padding: 0;
+			    box-sizing: border-box;
+			}
+
+			body {
+			    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			    min-height: 100vh;
+			    padding: 20px;
+			}
+
+			.container {
+			    max-width: 1200px;
+			    margin: 0 auto;
+			    background: rgba(255, 255, 255, 0.95);
+			    border-radius: 20px;
+			    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+			    backdrop-filter: blur(10px);
+			    overflow: hidden;
+			}
+
+			.header {
+			    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			    color: white;
+			    padding: 30px;
+			    text-align: center;
+			}
+
+			.header h1 {
+			    font-size: 2.5rem;
+			    margin-bottom: 10px;
+			    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+			}
+
+			.connection-status {
+			    padding: 15px;
+			    margin: 20px;
+			    border-radius: 10px;
+			    text-align: center;
+			    font-weight: bold;
+			    transition: all 0.3s ease;
+			}
+
+			.connected {
+			    background: linear-gradient(135deg, #4CAF50, #45a049);
+			    color: white;
+			}
+
+			.disconnected {
+			    background: linear-gradient(135deg, #f44336, #da190b);
+			    color: white;
+			}
+
+			.main-content {
+			    display: grid;
+			    grid-template-columns: 1fr 1fr;
+			    gap: 30px;
+			    padding: 30px;
+			}
+
+			.section {
+			    background: white;
+			    border-radius: 15px;
+			    padding: 25px;
+			    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+			    transition: transform 0.3s ease, box-shadow 0.3s ease;
+			}
+
+			.section:hover {
+			    transform: translateY(-5px);
+			    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+			}
+
+			.section h3 {
+			    color: #333;
+			    margin-bottom: 20px;
+			    font-size: 1.4rem;
+			    border-bottom: 2px solid #667eea;
+			    padding-bottom: 10px;
+			}
+
+			.form-group {
+			    margin-bottom: 20px;
+			}
+
+			.form-group label {
+			    display: block;
+			    margin-bottom: 8px;
+			    font-weight: 600;
+			    color: #555;
+			}
+
+			.form-group input {
+			    width: 100%;
+			    padding: 12px;
+			    border: 2px solid #e0e0e0;
+			    border-radius: 8px;
+			    font-size: 16px;
+			    transition: border-color 0.3s ease;
+			}
+
+			.form-group input:focus {
+			    outline: none;
+			    border-color: #667eea;
+			    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+			}
+
+			.btn {
+			    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			    color: white;
+			    border: none;
+			    padding: 12px 25px;
+			    border-radius: 8px;
+			    cursor: pointer;
+			    font-size: 16px;
+			    font-weight: 600;
+			    transition: all 0.3s ease;
+			    width: 100%;
+			    margin-top: 10px;
+			}
+
+			.btn:hover {
+			    transform: translateY(-2px);
+			    box-shadow: 0 8px 15px rgba(102, 126, 234, 0.3);
+			}
+
+			.btn:disabled {
+			    background: #ccc;
+			    cursor: not-allowed;
+			    transform: none;
+			    box-shadow: none;
+			}
+
+			.info-display {
+			    background: #f8f9fa;
+			    border-radius: 10px;
+			    padding: 20px;
+			    margin-top: 20px;
+			}
+
+			.info-item {
+			    display: flex;
+			    justify-content: space-between;
+			    align-items: center;
+			    padding: 10px 0;
+			    border-bottom: 1px solid #e0e0e0;
+			}
+
+			.info-item:last-child {
+			    border-bottom: none;
+			}
+
+			.info-label {
+			    font-weight: 600;
+			    color: #555;
+			}
+
+			.info-value {
+			    font-family: 'Courier New', monospace;
+			    background: #e9ecef;
+			    padding: 5px 10px;
+			    border-radius: 5px;
+			    word-break: break-all;
+			}
+
+			.events-section {
+			    grid-column: 1 / -1;
+			    max-height: 400px;
+			    overflow-y: auto;
+			}
+
+			.event-item {
+			    background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+			    border-radius: 10px;
+			    padding: 15px;
+			    margin-bottom: 10px;
+			    border-left: 4px solid #667eea;
+			}
+
+			.event-header {
+			    font-weight: bold;
+			    color: #333;
+			    margin-bottom: 5px;
+			}
+
+			.event-details {
+			    font-size: 0.9rem;
+			    color: #666;
+			}
+
+			.loading {
+			    display: inline-block;
+			    width: 20px;
+			    height: 20px;
+			    border: 3px solid #f3f3f3;
+			    border-top: 3px solid #667eea;
+			    border-radius: 50%;
+			    animation: spin 1s linear infinite;
+			    margin-left: 10px;
+			}
+
+			@keyframes spin {
+			    0% { transform: rotate(0deg); }
+			    100% { transform: rotate(360deg); }
+			}
+
+			.error {
+			    background: #ffebee;
+			    color: #c62828;
+			    padding: 15px;
+			    border-radius: 8px;
+			    margin: 15px 0;
+			    border-left: 4px solid #f44336;
+			}
+
+			.success {
+			    background: #e8f5e8;
+			    color: #2e7d32;
+			    padding: 15px;
+			    border-radius: 8px;
+			    margin: 15px 0;
+			    border-left: 4px solid #4caf50;
+			}
+
+			.btn.connected-btn {
+			    background: linear-gradient(135deg, #4CAF50, #45a049);
+			}
+
+			.btn.connected-btn:hover {
+			    background: linear-gradient(135deg, #45a049, #3d8b40);
+			}
+
+			.disabled-btn {
+			    background: #ccc !important;
+			    cursor: not-allowed !important;
+			    color: #666 !important;
+			}
+
+			.disabled-btn:hover {
+			    transform: none !important;
+			    box-shadow: none !important;
+			}
+
+			@media (max-width: 768px) {
+			    .main-content {
+			        grid-template-columns: 1fr;
+			    }
+
+			    .header h1 {
+			        font-size: 2rem;
+			    }
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="header">
+				<h1>🏦 SimpleDeposit Contract</h1>
+				<p>Interact with your Ethereum smart contract</p>
+			</div>
+
+			<div id="connectionStatus" class="connection-status disconnected">
+				🔴 Wallet not connected
+			</div>
+
+			<div class="main-content">
+				<!-- Connect Wallet Section -->
+				<div id="walletSection" class="section">
+					<h3>🔗 Wallet Connection</h3>
+					<button id="connectWallet" class="btn">Connect MetaMask</button>
+				</div>
+
+				<!-- Account Info Section (hidden initially) -->
+				<div id="accountSection" class="section" style="display: none;">
+					<h3>👤 Account Info</h3>
+					<div class="info-display">
+						<div class="info-item">
+							<span class="info-label">Account:</span>
+							<span id="accountAddress" class="info-value">Not connected</span>
+						</div>
+						<div class="info-item">
+							<span class="info-label">Network:</span>
+							<span id="networkName" class="info-value">Unknown</span>
+						</div>
+						<div class="info-item">
+							<span class="info-label">Balance:</span>
+							<span id="accountBalance" class="info-value">0 ETH</span>
+						</div>
+						<button
+							id="disconnectWallet"
+							class="btn"
+							style="background: #f44336; margin-top: 15px;"
+						>
+							Disconnect
+						</button>
+					</div>
+				</div>
+
+				<!-- Contract Info Section -->
+				<div class="section">
+					<h3>📋 Contract Information</h3>
+					<div class="form-group">
+						<label for="contractAddress">Contract Address:</label>
+						<input
+							type="text"
+							id="contractAddress"
+							placeholder="Enter contract address"
+							value="0x32F21A01502c1e614100f129496e6c06c3c08AF4"
+						/>
+					</div>
+					<button id="loadContract" class="btn">Load Contract</button>
+					<div class="info-display">
+						<div class="info-item">
+							<span class="info-label">Contract Balance:</span>
+							<span id="contractBalance" class="info-value">0 ETH</span>
+						</div>
+						<div class="info-item">
+							<span class="info-label">Owner:</span>
+							<span id="contractOwner" class="info-value">Not loaded</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Deposit Section -->
+				<div class="section">
+					<h3>💰 Deposit Funds</h3>
+					<div class="form-group">
+						<label for="depositAmount">Amount (ETH):</label>
+						<input
+							type="number"
+							id="depositAmount"
+							step="0.001"
+							min="0"
+							placeholder="0.001"
+						/>
+					</div>
+					<button id="depositBtn" class="btn" disabled>Deposit</button>
+				</div>
+
+				<!-- Withdraw Section -->
+				<div class="section">
+					<h3>💸 Withdraw Funds</h3>
+					<div class="form-group">
+						<label for="withdrawAmount">Amount (ETH):</label>
+						<input
+							type="number"
+							id="withdrawAmount"
+							step="0.001"
+							min="0"
+							placeholder="0.001"
+						/>
+					</div>
+					<div class="form-group">
+						<label for="withdrawTo">To Address:</label>
+						<input type="text" id="withdrawTo" placeholder="0x..." />
+					</div>
+					<button id="withdrawBtn" class="btn" disabled>
+						Withdraw (Owner Only)
+					</button>
+				</div>
+
+				<!-- Set Info Section -->
+				<div class="section">
+					<h3>📝 Set Information</h3>
+					<div class="form-group">
+						<label for="userName">Name:</label>
+						<input type="text" id="userName" placeholder="Enter your name" />
+					</div>
+					<div class="form-group">
+						<label for="userAge">Age:</label>
+						<input
+							type="number"
+							id="userAge"
+							min="0"
+							placeholder="Enter your age"
+						/>
+					</div>
+					<button id="setInfoBtn" class="btn" disabled>Set Information</button>
+					<button id="sayHelloBtn" class="btn" disabled>Say Hello</button>
+				</div>
+
+				<!-- Events Section -->
+				<div class="section events-section">
+					<h3>📊 Contract Events</h3>
+					<button id="refreshEvents" class="btn">Refresh Events</button>
+					<div id="eventsContainer" style="margin-top: 20px;">
+						<p style="text-align: center; color: #666;">No events to display</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+				// Contract ABI and configuration
+				const CONTRACT_ABI = [
+			  {
+			    "inputs": [],
+			    "stateMutability": "nonpayable",
+			    "type": "constructor"
+			  },
+			  {
+			    "anonymous": false,
+			    "inputs": [
+			      {
+			        "indexed": true,
+			        "internalType": "address",
+			        "name": "from",
+			        "type": "address"
+			      },
+			      {
+			        "indexed": false,
+			        "internalType": "uint256",
+			        "name": "amount",
+			        "type": "uint256"
+			      }
+			    ],
+			    "name": "Deposited",
+			    "type": "event"
+			  },
+			  {
+			    "anonymous": false,
+			    "inputs": [
+			      {
+			        "indexed": false,
+			        "internalType": "string",
+			        "name": "name",
+			        "type": "string"
+			      },
+			      {
+			        "indexed": false,
+			        "internalType": "uint256",
+			        "name": "age",
+			        "type": "uint256"
+			      }
+			    ],
+			    "name": "InfoUpdate",
+			    "type": "event"
+			  },
+			  {
+			    "anonymous": false,
+			    "inputs": [
+			      {
+			        "indexed": true,
+			        "internalType": "address",
+			        "name": "to",
+			        "type": "address"
+			      },
+			      {
+			        "indexed": false,
+			        "internalType": "uint256",
+			        "name": "amount",
+			        "type": "uint256"
+			      }
+			    ],
+			    "name": "Withdrawn",
+			    "type": "event"
+			  },
+			  {
+			    "stateMutability": "payable",
+			    "type": "fallback",
+			    "payable": true
+			  },
+			  {
+			    "inputs": [],
+			    "name": "balance",
+			    "outputs": [
+			      {
+			        "internalType": "uint256",
+			        "name": "",
+			        "type": "uint256"
+			      }
+			    ],
+			    "stateMutability": "view",
+			    "type": "function",
+			    "constant": true
+			  },
+			  {
+			    "inputs": [],
+			    "name": "owner",
+			    "outputs": [
+			      {
+			        "internalType": "address payable",
+			        "name": "",
+			        "type": "address"
+			      }
+			    ],
+			    "stateMutability": "view",
+			    "type": "function",
+			    "constant": true
+			  },
+			  {
+			    "stateMutability": "payable",
+			    "type": "receive",
+			    "payable": true
+			  },
+			  {
+			    "inputs": [],
+			    "name": "deposit",
+			    "outputs": [],
+			    "stateMutability": "payable",
+			    "type": "function",
+			    "payable": true
+			  },
+			  {
+			    "inputs": [
+			      {
+			        "internalType": "uint256",
+			        "name": "_num",
+			        "type": "uint256"
+			      },
+			      {
+			        "internalType": "address payable",
+			        "name": "_to",
+			        "type": "address"
+			      }
+			    ],
+			    "name": "withdraw",
+			    "outputs": [],
+			    "stateMutability": "nonpayable",
+			    "type": "function"
+			  },
+			  {
+			    "inputs": [],
+			    "name": "getBalance",
+			    "outputs": [
+			      {
+			        "internalType": "uint256",
+			        "name": "",
+			        "type": "uint256"
+			      }
+			    ],
+			    "stateMutability": "view",
+			    "type": "function",
+			    "constant": true
+			  },
+			  {
+			    "inputs": [
+			      {
+			        "internalType": "string",
+			        "name": "_name",
+			        "type": "string"
+			      },
+			      {
+			        "internalType": "uint256",
+			        "name": "_age",
+			        "type": "uint256"
+			      }
+			    ],
+			    "name": "setInfo",
+			    "outputs": [],
+			    "stateMutability": "nonpayable",
+			    "type": "function"
+			  },
+			  {
+			    "inputs": [],
+			    "name": "sayHello",
+			    "outputs": [
+			      {
+			        "internalType": "string",
+			        "name": "",
+			        "type": "string"
+			      }
+			    ],
+			    "stateMutability": "pure",
+			    "type": "function",
+			    "constant": true
+			  }
+			]
+				// Global variables
+				let provider, signer, contract, userAccount;
+
+				// Initialize when document is ready
+				$(document).ready(function() {
+				    initializeEventListeners();
+				    checkWalletConnection();
+				});
+
+				function initializeEventListeners() {
+				    $('#connectWallet').click(connectWallet);
+				    $('#disconnectWallet').click(disconnectWallet);
+				    $('#loadContract').click(loadContract);
+				    $('#depositBtn').click(deposit);
+				    $('#withdrawBtn').click(withdraw);
+				    $('#setInfoBtn').click(setInfo);
+				    $('#sayHelloBtn').click(sayHello);
+				    $('#refreshEvents').click(loadEvents);
+				}
+
+				async function connectWallet() {
+				    try {
+				        if (typeof window.ethereum === 'undefined') {
+				            showError('MetaMask is not installed. Please install MetaMask to continue.');
+				            return;
+				        }
+
+				        showLoading('#connectWallet');
+
+				        // Request account access
+				        await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+				        // Create provider and signer
+				        provider = new ethers.BrowserProvider(window.ethereum);
+				        signer = await provider.getSigner();
+				        userAccount = await signer.getAddress();
+
+				        // Update UI - hide connect section, show account section
+				        $('#walletSection').hide();
+				        $('#accountSection').show();
+				        updateConnectionStatus(true);
+				        await updateAccountInfo();
+				        enableButtons();
+
+				        // Listen for account changes
+				        window.ethereum.on('accountsChanged', handleAccountsChanged);
+				        window.ethereum.on('chainChanged', handleChainChanged);
+
+				    } catch (error) {
+				        console.error('Error connecting wallet:', error);
+				        showError('Failed to connect wallet: ' + error.message);
+				    } finally {
+				        hideLoading('#connectWallet', 'Connect MetaMask');
+				    }
+				}
+
+				async function checkWalletConnection() {
+				    try {
+				        if (typeof window.ethereum !== 'undefined') {
+				            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+				            if (accounts.length > 0) {
+				                // Silently connect
+				                provider = new ethers.BrowserProvider(window.ethereum);
+				                signer = await provider.getSigner();
+				                userAccount = await signer.getAddress();
+
+				                // Update UI - hide connect section, show account section
+				                $('#walletSection').hide();
+				                $('#accountSection').show();
+				                updateConnectionStatus(true);
+				                await updateAccountInfo();
+				                enableButtons();
+
+				                // Listen for account changes
+				                window.ethereum.on('accountsChanged', handleAccountsChanged);
+				                window.ethereum.on('chainChanged', handleChainChanged);
+				            }
+				        }
+				    } catch (error) {
+				        console.error('Error checking wallet connection:', error);
+				    }
+				}
+
+				function handleAccountsChanged(accounts) {
+				    if (accounts.length === 0) {
+				        disconnectWallet();
+				    } else {
+				        // Account changed, reconnect
+				        const newAccount = accounts[0];
+				        if (newAccount !== userAccount) {
+				            connectWallet();
+				        }
+				    }
+				}
+
+				function disconnectWallet() {
+				    // Reset all states
+				    provider = null;
+				    signer = null;
+				    contract = null;
+				    userAccount = null;
+
+				    // Update UI - show connect section, hide account section
+				    $('#walletSection').show();
+				    $('#accountSection').hide();
+				    updateConnectionStatus(false);
+				    disableButtons();
+
+				    // Reset contract info
+				    $('#contractBalance').text('0 ETH');
+				    $('#contractOwner').text('Not loaded');
+				}
+
+				function handleChainChanged(chainId) {
+				    window.location.reload();
+				}
+
+				async function updateAccountInfo() {
+				    try {
+				        const balance = await provider.getBalance(userAccount);
+				        const network = await provider.getNetwork();
+
+				        $('#accountAddress').text(shortenAddress(userAccount));
+				        $('#accountBalance').text(ethers.formatEther(balance).substring(0, 8) + ' ETH');
+				        $('#networkName').text(network.name || `Chain ID: ${network.chainId}`);
+				    } catch (error) {
+				        console.error('Error updating account info:', error);
+				    }
+				}
+
+				function updateConnectionStatus(connected) {
+				    const statusElement = $('#connectionStatus');
+				    if (connected) {
+				        statusElement.removeClass('disconnected').addClass('connected');
+				        statusElement.html('🟢 Wallet connected');
+				    } else {
+				        statusElement.removeClass('connected').addClass('disconnected');
+				        statusElement.html('🔴 Wallet not connected');
+				    }
+				}
+
+				async function loadContract() {
+				    try {
+				        const contractAddress = $('#contractAddress').val().trim();
+				        if (!contractAddress) {
+				            showError('Please enter a contract address');
+				            return;
+				        }
+
+				        if (!ethers.isAddress(contractAddress)) {
+				            showError('Invalid contract address');
+				            return;
+				        }
+
+				        if (!signer) {
+				            showError('Please connect your wallet first');
+				            return;
+				        }
+
+				        showLoading('#loadContract');
+				        contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
+
+				        // Test contract by calling a view function
+				        await updateContractInfo();
+
+				    } catch (error) {
+				        console.error('Error loading contract:', error);
+				        showError('Failed to load contract: ' + error.message);
+				    } finally {
+				        hideLoading('#loadContract', 'Load Contract');
+				    }
+				}
+
+				async function updateContractInfo() {
+				    try {
+				        if (!contract) return;
+
+				        const balance = await contract.getBalance();
+				        const owner = await contract.owner();
+
+				        $('#contractBalance').text(ethers.formatEther(balance).substring(0, 8) + ' ETH');
+				        $('#contractOwner').text(shortenAddress(owner));
+
+				        // Check if current user is owner and update withdraw button
+				        updateWithdrawButton(owner.toLowerCase() === userAccount.toLowerCase());
+
+				    } catch (error) {
+				        console.error('Error updating contract info:', error);
+				    }
+				}
+
+				async function deposit() {
+				    try {
+				        const amount = $('#depositAmount').val();
+				        if (!amount || parseFloat(amount) <= 0) {
+				            showError('Please enter a valid deposit amount');
+				            return;
+				        }
+
+				        if (!contract) {
+				            showError('Please load the contract first');
+				            return;
+				        }
+
+				        const amountWei = ethers.parseEther(amount);
+
+				        showLoading('#depositBtn');
+				        const tx = await contract.deposit({ value: amountWei });
+
+				        await tx.wait();
+				        $('#depositAmount').val('');
+
+				        await updateContractInfo();
+				        await updateAccountInfo();
+
+				    } catch (error) {
+				        console.error('Error depositing:', error);
+				        showError('Deposit failed: ' + error.message);
+				    } finally {
+				        hideLoading('#depositBtn', 'Deposit');
+				    }
+				}
+
+				function updateWithdrawButton(isOwner) {
+				    const withdrawBtn = $('#withdrawBtn');
+				    if (isOwner) {
+				        withdrawBtn.text('Withdraw (Owner)').removeClass('disabled-btn');
+				        withdrawBtn.prop('disabled', false);
+				    } else {
+				        withdrawBtn.text('Withdraw (Owner Only - Access Denied)').addClass('disabled-btn');
+				        withdrawBtn.prop('disabled', true);
+				    }
+				}
+
+				async function withdraw() {
+				    try {
+				        const amount = $('#withdrawAmount').val();
+				        const toAddress = $('#withdrawTo').val().trim();
+
+				        if (!amount || parseFloat(amount) <= 0) {
+				            showError('Please enter a valid withdrawal amount');
+				            return;
+				        }
+
+				        if (!toAddress || !ethers.isAddress(toAddress)) {
+				            showError('Please enter a valid recipient address');
+				            return;
+				        }
+
+				        if (!contract) {
+				            showError('Please load the contract first');
+				            return;
+				        }
+
+				        // Check if user is owner before attempting withdrawal
+				        const owner = await contract.owner();
+				        if (owner.toLowerCase() !== userAccount.toLowerCase()) {
+				            showError('Only the contract owner can withdraw funds');
+				            return;
+				        }
+
+				        const amountWei = ethers.parseEther(amount);
+
+				        showLoading('#withdrawBtn');
+				        const tx = await contract.withdraw(amountWei, toAddress);
+
+				        await tx.wait();
+				        $('#withdrawAmount').val('');
+				        $('#withdrawTo').val('');
+
+				        await updateContractInfo();
+				        await updateAccountInfo();
+
+				    } catch (error) {
+				        console.error('Error withdrawing:', error);
+				        if (error.message.includes('you do not have right to withdraw')) {
+				            showError('Access denied: Only the contract owner can withdraw');
+				        } else if (error.message.includes('you do not have enough money')) {
+				            showError('Insufficient contract balance');
+				        } else {
+				            showError('Withdrawal failed: ' + error.message);
+				        }
+				    } finally {
+				        hideLoading('#withdrawBtn', $('#withdrawBtn').hasClass('disabled-btn') ? 'Withdraw (Owner Only - Access Denied)' : 'Withdraw (Owner)');
+				    }
+				}
+
+				async function setInfo() {
+				    try {
+				        const name = $('#userName').val().trim();
+				        const age = $('#userAge').val();
+
+				        if (!name) {
+				            showError('Please enter a name');
+				            return;
+				        }
+
+				        if (!age || parseInt(age) < 0) {
+				            showError('Please enter a valid age');
+				            return;
+				        }
+
+				        if (!contract) {
+				            showError('Please load the contract first');
+				            return;
+				        }
+
+				        showLoading('#setInfoBtn');
+				        const tx = await contract.setInfo(name, parseInt(age));
+
+				        await tx.wait();
+				        $('#userName').val('');
+				        $('#userAge').val('');
+
+				    } catch (error) {
+				        console.error('Error setting info:', error);
+				        showError('Failed to set information: ' + error.message);
+				    } finally {
+				        hideLoading('#setInfoBtn', 'Set Information');
+				    }
+				}
+
+				async function sayHello() {
+				    try {
+				        if (!contract) {
+				            showError('Please load the contract first');
+				            return;
+				        }
+
+				        showLoading('#sayHelloBtn');
+				        const result = await contract.sayHello();
+				        alert('Contract says: "' + result + '"');
+
+				    } catch (error) {
+				        console.error('Error calling sayHello:', error);
+				        showError('Failed to call sayHello: ' + error.message);
+				    } finally {
+				        hideLoading('#sayHelloBtn', 'Say Hello');
+				    }
+				}
+
+				async function loadEvents() {
+				    try {
+				        if (!contract) {
+				            showError('Please load the contract first');
+				            return;
+				        }
+
+				        showLoading('#refreshEvents');
+
+				        // Get events from the last 10 blocks
+				        const currentBlock = await provider.getBlockNumber();
+				        const fromBlock = Math.max(0, currentBlock - 1000);
+
+				        const depositedEvents = await contract.queryFilter('Deposited', fromBlock);
+				        const withdrawnEvents = await contract.queryFilter('Withdrawn', fromBlock);
+				        const infoUpdateEvents = await contract.queryFilter('InfoUpdate', fromBlock);
+
+				        const allEvents = [...depositedEvents, ...withdrawnEvents, ...infoUpdateEvents];
+				        allEvents.sort((a, b) => b.blockNumber - a.blockNumber);
+
+				        displayEvents(allEvents);
+
+				    } catch (error) {
+				        console.error('Error loading events:', error);
+				        showError('Failed to load events: ' + error.message);
+				    } finally {
+				        hideLoading('#refreshEvents', 'Refresh Events');
+				    }
+				}
+
+				function displayEvents(events) {
+				    const container = $('#eventsContainer');
+				    container.empty();
+
+				    if (events.length === 0) {
+				        container.html('<p style="text-align: center; color: #666;">No events found</p>');
+				        return;
+				    }
+
+				    events.forEach(event => {
+				        const eventHtml = createEventHtml(event);
+				        container.append(eventHtml);
+				    });
+				}
+
+				function createEventHtml(event) {
+				    let content = '';
+
+				    switch (event.eventName || event.fragment.name) {
+				        case 'Deposited':
+				            content = `
+				                <div class="event-header">💰 Deposit Event</div>
+				                <div class="event-details">
+				                    From: ${shortenAddress(event.args[0])}<br>
+				                    Amount: ${ethers.formatEther(event.args[1])} ETH<br>
+				                    Block: ${event.blockNumber}
+				                </div>
+				            `;
+				            break;
+				        case 'Withdrawn':
+				            content = `
+				                <div class="event-header">💸 Withdrawal Event</div>
+				                <div class="event-details">
+				                    To: ${shortenAddress(event.args[0])}<br>
+				                    Amount: ${ethers.formatEther(event.args[1])} ETH<br>
+				                    Block: ${event.blockNumber}
+				                </div>
+				            `;
+				            break;
+				        case 'InfoUpdate':
+				            content = `
+				                <div class="event-header">📝 Info Update Event</div>
+				                <div class="event-details">
+				                    Name: ${event.args[0]}<br>
+				                    Age: ${event.args[1].toString()}<br>
+				                    Block: ${event.blockNumber}
+				                </div>
+				            `;
+				            break;
+				        default:
+				            content = `
+				                <div class="event-header">📊 Unknown Event</div>
+				                <div class="event-details">Block: ${event.blockNumber}</div>
+				            `;
+				    }
+
+				    return `<div class="event-item">${content}</div>`;
+				}
+
+				function enableButtons() {
+				    $('#depositBtn, #withdrawBtn, #setInfoBtn, #sayHelloBtn').prop('disabled', false);
+				}
+
+				function disableButtons() {
+				    $('#depositBtn, #withdrawBtn, #setInfoBtn, #sayHelloBtn').prop('disabled', true);
+				}
+
+				function showLoading(buttonSelector) {
+				    $(buttonSelector).prop('disabled', true).html($(buttonSelector).text() + ' <span class="loading"></span>');
+				}
+
+				function hideLoading(buttonSelector, originalText) {
+				    $(buttonSelector).prop('disabled', false).html(originalText);
+				}
+
+				function showError(message) {
+				    // Remove existing error messages first
+				    $('.error').remove();
+				    const errorHtml = $(`<div class="error">❌ ${message}</div>`);
+				    $('.main-content').prepend(errorHtml);
+				    setTimeout(() => errorHtml.fadeOut(() => errorHtml.remove()), 5000);
+				}
+
+				function showSuccess(message) {
+				    // Remove existing success messages first
+				    $('.success').remove();
+				    const successHtml = $(`<div class="success">✅ ${message}</div>`);
+				    $('.main-content').prepend(successHtml);
+				    setTimeout(() => successHtml.fadeOut(() => successHtml.remove()), 3000);
+				}
+
+				function shortenAddress(address) {
+				    if (!address) return '';
+				    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+				}
+		</script>
+	</body>
+</html>
