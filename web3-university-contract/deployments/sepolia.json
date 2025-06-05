@@ -1,0 +1,27 @@
+{
+  "network": "sepolia",
+  "timestamp": "2025-06-05T12:43:54.000Z",
+  "deployer": "0x7878C4617329AD141e3834d23FCf1AA6476A6914",
+  "contracts": {
+    "YDToken": {
+      "address": "0xa466B2D92144Ee465B5D099457654cb57d4C931D",
+      "name": "YD Token",
+      "symbol": "YDT",
+      "totalSupply": "1000000000000000000000000",
+      "exchangeRate": "2500"
+    },
+    "YDCourseManager": {
+      "address": "0xcc9ba443A9b27fdC00fbbBc7DFdaBaeC919a242f",
+      "ydTokenAddress": "0xa466B2D92144Ee465B5D099457654cb57d4C931D",
+      "platformFeePercentage": "5",
+      "owner": "0x7878C4617329AD141e3834d23FCf1AA6476A6914"
+    }
+  },
+  "deploymentInfo": {
+    "network": "sepolia",
+    "chainId": null,
+    "timestamp": "2025-06-05T12:43:55.659Z",
+    "deployer": "0x7878C4617329AD141e3834d23FCf1AA6476A6914",
+    "blockNumber": null
+  }
+}

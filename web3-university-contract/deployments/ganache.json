@@ -1,0 +1,27 @@
+{
+  "network": "ganache",
+  "timestamp": "2025-06-03T12:55:04.206Z",
+  "deployer": "0xa0ea3613B92bb1736eA59d994C8518423933d8a4",
+  "contracts": {
+    "YDToken": {
+      "address": "0x9d1Ea2450fF5C0EB967A8079a0f45A99A541dC0d",
+      "name": "YD Token",
+      "symbol": "YDT",
+      "totalSupply": "1000000000000000000000000",
+      "exchangeRate": "2500"
+    },
+    "YDCourseManager": {
+      "address": "0xD16A77f042cfD637218BE91810c9d8f0EAc6424a",
+      "ydTokenAddress": "0x9d1Ea2450fF5C0EB967A8079a0f45A99A541dC0d",
+      "platformFeePercentage": "5",
+      "owner": "0xa0ea3613B92bb1736eA59d994C8518423933d8a4"
+    }
+  },
+  "deploymentInfo": {
+    "network": "ganache",
+    "chainId": null,
+    "timestamp": "2025-06-03T12:55:04.269Z",
+    "deployer": "0xa0ea3613B92bb1736eA59d994C8518423933d8a4",
+    "blockNumber": null
+  }
+}
